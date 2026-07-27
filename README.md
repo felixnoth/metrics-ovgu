@@ -12,6 +12,7 @@ Textbook: Huntington-Klein (2021), *The Effect* — free at
 | Folder | Content |
 |--------|---------|
 | `intro-to-r/` | The annotated R script for session A1, Introduction to R. Open it in RStudio and run it line by line. |
+| `intro-to-python/` | Optional: the same introduction as a Python script, section by section. R is the mandatory course language — use this only if you want to build Python alongside. |
 | `exercises/` | The five exercise sessions (E1–E5) with solutions in R scripts. Posted during the term. |
 | `extra-material/` | Additional material on specific problems and issues raised in the course. Grows over the term. |
 
@@ -32,6 +33,10 @@ Textbook: Huntington-Klein (2021), *The Effect* — free at
 Installation help: Alexander (2023), *Telling Stories with Data*, chapters
 A.3.1 and A.3.2 — free at
 [tellingstorieswithdata.com](https://tellingstorieswithdata.com).
+
+For the optional Python track: install Python via
+[Anaconda](https://www.anaconda.com/download), then
+`pip install pandas seaborn matplotlib causaldata`.
 
 ## License
 
