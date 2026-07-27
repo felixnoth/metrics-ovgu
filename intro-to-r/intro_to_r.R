@@ -25,7 +25,7 @@
 
 
 # ---------------------------------------------------------------------------- #
-# 0. Finding your way around RStudio                              (~10 minutes)
+# 0. Finding your way around RStudio
 # ---------------------------------------------------------------------------- #
 # RStudio shows four panes:
 #   top-left:     this script (your lab notebook -- everything worth keeping
@@ -56,7 +56,7 @@ getwd()
 
 
 # ---------------------------------------------------------------------------- #
-# 1. Objects, vectors, functions                                  (~15 minutes)
+# 1. Objects, vectors, functions
 # ---------------------------------------------------------------------------- #
 # R is a calculator with memory. You store results in named objects using the
 # arrow <- (RStudio shortcut: Alt+Minus).
@@ -106,7 +106,7 @@ class(age >= 40)                # logical
 
 
 # ---------------------------------------------------------------------------- #
-# 2. Packages and real data                                       (~10 minutes)
+# 2. Packages and real data
 # ---------------------------------------------------------------------------- #
 # Base R is extended by packages. You installed two before class; now you load
 # them (loading is needed once per R session):
@@ -139,7 +139,7 @@ table(Mroz$k5)        # frequency table (Stata users: this is -tab-)
 
 
 # ---------------------------------------------------------------------------- #
-# 3. Processing data with dplyr                                   (~20 minutes)
+# 3. Processing data with dplyr
 # ---------------------------------------------------------------------------- #
 # dplyr gives you five verbs that cover most of what you did in the data
 # section of any empirical paper. Each takes a dataset, returns a dataset:
@@ -212,7 +212,7 @@ Mroz |>
 
 
 # ---------------------------------------------------------------------------- #
-# 4. Moments of a distribution                                    (~10 minutes)
+# 4. Moments of a distribution
 # ---------------------------------------------------------------------------- #
 # Empirical work starts with knowing your variables' distributions. The
 # moments and quantiles, one line each:
@@ -247,7 +247,7 @@ Mroz |>
 
 
 # ---------------------------------------------------------------------------- #
-# 5. Plotting with ggplot2                                        (~20 minutes)
+# 5. Plotting with ggplot2
 # ---------------------------------------------------------------------------- #
 # Switching datasets: restaurant_inspections -- 27,178 health inspections in
 # Anchorage, Alaska; The Effect uses it in the regression chapter.
@@ -323,7 +323,87 @@ ggsave("scatter_inspections.png", width = 8, height = 5)
 
 
 # ---------------------------------------------------------------------------- #
-# 6. Wrap-up: working reproducibly                                 (~5 minutes)
+# 6. Putting it all together: one complete descriptive analysis
+# ---------------------------------------------------------------------------- #
+# A final trial run, structured the way you would start ANY empirical
+# project: look at the data, describe the variables, then study a
+# relationship -- first with graphs, then as correlations.
+#
+# Data: gapminder -- life expectancy and GDP per capita for 142 countries,
+# 1952-2007 (one row per country-year; also in causaldata).
+
+glimpse(gapminder)
+
+# Step 1: restrict to the sample you want -- the most recent cross-section
+gm <- gapminder |>
+  filter(year == 2007)
+nrow(gm)                                # one row per country now
+
+# Step 2: descriptive statistics of the variables of interest
+gm |>
+  summarize(across(
+    c(lifeExp, gdpPercap),
+    list(mean = mean, median = median, sd = sd, min = min, max = max)
+  ))
+
+# For GDP per capita the mean sits far above the median -- right skew, as
+# with the family incomes in section 4. Confirm by eye:
+ggplot(gm, aes(x = gdpPercap)) +
+  geom_histogram(bins = 30) +
+  labs(x = "GDP per capita (USD)", y = "Count")
+
+# Step 3: the relationship, as a graph
+ggplot(gm, aes(x = gdpPercap, y = lifeExp)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x = "GDP per capita (USD)", y = "Life expectancy (years)")
+
+# Strong -- but clearly not linear: gains flatten out at high incomes, and
+# the linear fit misses both ends. Money variables in economics usually live
+# on a log scale; one added layer re-draws the picture:
+ggplot(gm, aes(x = gdpPercap, y = lifeExp)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  scale_x_log10() +
+  labs(x = "GDP per capita (USD, log scale)", y = "Life expectancy (years)")
+
+# Step 4: the relationship, as a number. cor() gives the Pearson
+# correlation coefficient; compare the linear and the log version:
+cor(gm$lifeExp, gm$gdpPercap)             # linear:   understates the link
+cor(gm$lifeExp, log(gm$gdpPercap))        # in logs:  much stronger
+
+# The rank (Spearman) correlation ignores the functional form entirely --
+# it asks only: do richer countries rank higher in life expectancy?
+cor(gm$lifeExp, gm$gdpPercap, method = "spearman")
+
+# Spearman close to the log-Pearson, both far above the linear Pearson:
+# the association is tight and monotone, and approximately linear in logs.
+# The graph told you this already -- the numbers now let you report it.
+
+# Correlations by group: summarize() accepts any function, cor() included
+gm |>
+  group_by(continent) |>
+  summarize(
+    n          = n(),
+    cor_loginc = cor(lifeExp, log(gdpPercap))
+  )
+
+# Step 5: say it in words. Across countries in 2007, life expectancy and
+# log GDP per capita are strongly positively correlated; the association
+# holds within every continent, though with varying strength. That is a
+# DESCRIPTION, not a causal effect of income on health -- distinguishing
+# the two is what the rest of this course is about.
+
+# TRY IT #5 -----------------------------------------------------------------
+# Repeat steps 1, 2, and 4 for the year 1952: descriptive statistics of
+# lifeExp and gdpPercap, then the three correlations (linear, log,
+# Spearman). Is the income-longevity association stronger or weaker than
+# in 2007?
+# -----------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------- #
+# 7. Wrap-up: working reproducibly
 # ---------------------------------------------------------------------------- #
 # The habits that matter from today:
 #
@@ -385,3 +465,17 @@ ggsave("scatter_inspections.png", width = 8, height = 5)
 #   geom_point(alpha = 0.4) +
 #   geom_smooth(method = "lm") +
 #   labs(x = "Age", y = "Log wage")
+
+# TRY IT #5
+# gm52 <- gapminder |> filter(year == 1952)
+# gm52 |>
+#   summarize(across(
+#     c(lifeExp, gdpPercap),
+#     list(mean = mean, median = median, sd = sd, min = min, max = max)
+#   ))
+# cor(gm52$lifeExp, gm52$gdpPercap)
+# cor(gm52$lifeExp, log(gm52$gdpPercap))
+# cor(gm52$lifeExp, gm52$gdpPercap, method = "spearman")
+# Compare all three across the two years. Note the 1952 income distribution
+# is far more skewed (one extreme oil-state outlier), so the gap between the
+# linear Pearson and the other two is especially instructive there.
