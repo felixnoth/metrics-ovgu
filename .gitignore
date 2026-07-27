@@ -1,0 +1,7 @@
+# private working notes stay out of the public repo
+PROJECT-STATUS.md
+
+# R detritus
+.Rhistory
+.RData
+.Rproj.user/
